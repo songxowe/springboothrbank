@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>华融湘江银行</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="js/jquery.easy/themes/default/easyui.css">
+  <link rel="stylesheet" href="static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="static/h-ui.admin/css/style.css">
+  <style>
+    .input {
+      width: 200px;
+      height: 20px;
+      border: 1px solid #95B8E7;
+    }
+
+    #menuRoleTable {
+      margin: 10px auto;
+      border: 0px solid #95B8E7;
+      border-collapse: collapse;
+    }
+
+    #menuRoleTable td {
+      border: 0px solid #95B8E7;
+    }
+  </style>
+</head>
+<body>
+<form action="" method="post" id="menuroleForm">
+  <table width="300" height="100" id="menuRoleTable">
+    <tr height="30">
+      <td width="132">
+        <div align="right">
+          选择角色：
+        </div>
+      </td>
+      <td>
+        <input type="text" id="roleSelect" name="roleId"/>
+        <input type="hidden" id="roleId">
+        <input type="hidden" id="roleName">
+      </td>
+    </tr>
+    <tr>
+      <td>
+        <div align="right">
+          选择菜单：
+        </div>
+      </td>
+      <td>
+        <ul id="menuTree">
+
+        </ul>
+      </td>
+    </tr>
+    <tr height="30">
+      <td colspan="2">
+        <div align="center">
+          <input type="submit" class="btn btn-primary radius"
+                 value="&nbsp;&nbsp;保存&nbsp;&nbsp;">
+        </div>
+      </td>
+    </tr>
+  </table>
+</form>
+
+<script src="js/jquery-3.3.1.min.js"></script>
+<script src="static/h-ui/js/H-ui.min.js"></script>
+<script src="static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="static/layer/2.4/layer.js"></script>
+<script src="js/jquery.validation/jquery.validate.js"></script>
+<script src="js/jquery.validation/validate-methods.js"></script>
+<script src="js/jquery.validation/messages_zh.js"></script>
+<script src="js/jquery.easy/jquery.easyui.min.js"></script>
+<script src="js/bank.js"></script>
+<script type="text/javascript">
+  $(window).on('load', () => {
+    var roleId = localStorage.getItem("roleId")
+    var roleName = localStorage.getItem("roleName")
+    $("#roleId").val(roleId)
+    $("#roleName").val(roleName)
+    localStorage.removeItem("roleId")
+    localStorage.removeItem("roleName")
+
+    $("#menuTree").tree({
+      url: BANK_URL + "menu_indexAll",
+      type: "post",
+      lines: true,
+      animate: true,
+      checkbox: true,
+      cascadeCheck: false,
+      onLoadSuccess: function (node, data) {
+        if (data) {
+          $(data).each(function (index, value) {
+            if (this.state == "closed") {
+              $("#menuTree").tree("expandAll")
+            }
+          })
+
+          // 选中角色对应的菜单
+          $("#roleSelect").combobox({
+            url: BANK_URL + "menuRole",
+            type: "post",
+            valueField: "id",
+            textField: "name",
+            onSelect: function (record) {//根据选中的角色id查询显示对应的menu
+              $.ajax({
+                type: "POST",
+                url: BANK_URL + "menuRole_findMenu",
+                data: "roleId=" + record["id"],
+                dataType: "json",
+                headers: createAuthorizationTokenHeader(),
+                success: function (data) {
+                  data.forEach(item => {
+                    var node = $("#menuTree").tree("find", item)
+                    if (node) {
+                      // console.log(node.target);
+                      $("#menuTree").tree("check", node.target)
+                    }
+                  })
+                }
+              })
+            },
+            onLoadSuccess: function () {//设置默认选中项
+              $("#roleSelect").combobox("select", $("#roleId").val())
+              $("#roleSelect").combobox("setValue", $("#roleName").val())
+            }
+          })
+        }
+      }
+    })
+
+
+    $("#menuroleForm").validate({
+      rules: {},
+      onkeyup: false,
+      focusCleanup: true,
+      success: "valid",
+      submitHandler: function (form) {
+        var nodes = $("#menuTree").tree('getChecked');
+        var ids = [];
+        for (var i = 0; i < nodes.length; i++) {
+          ids.push(nodes[i].id);
+          if (nodes[i].parentId > 0) {
+            ids.push(nodes[i].parentId)
+          }
+        }
+
+        $.ajax({
+          type: "post",
+          url: BANK_URL + "menuRole_save",
+          data: {roleId: $("#roleId").val(), menuIds: ids.join(",")},
+          dataType: "json",
+          headers: createAuthorizationTokenHeader(),
+          success: function (data) {
+            if (data) {
+              var index = parent.layer.getFrameIndex(window.name)
+              layer.msg("保存成功!", {icon: 1, time: 1000})
+
+              setTimeout(() => {
+                window.parent.location.reload()
+                parent.layer.close(index)
+              }, 800)
+            }
+          },
+          error: function (jqXHR, textStatus, errorthrown) {
+            layer.alert("系统内部错误,请与管理员联系!")
+          }
+        })
+      }
+    })
+  })
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>华融湘江银行</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="static/h-ui.admin/css/H-ui.login.css">
+  <link rel="stylesheet" href="static/Hui-iconfont/1.0.8/iconfont.css">
+</head>
+<body>
+<div class="header"></div>
+<div class="loginWraper">
+  <div id="loginForm" class="loginBox">
+    <form class="form form-horizontal" id="f" method="post">
+      <div class="row cl">
+        <label class="form-label col-xs-3" for="username">
+          <i class="Hui-iconfont">&#xe60d;</i>
+        </label>
+        <div class="formControls col-xs-8">
+          <input type="text" id="username" placeholder="用户名" class="input-text size-L" autofocus>
+        </div>
+      </div>
+
+      <div class="row cl">
+        <label class="form-label col-xs-3" for="password">
+          <i class="Hui-iconfont">&#xe60e;</i>
+        </label>
+        <div class="formControls col-xs-8">
+          <input type="password" id="password" placeholder="密码" class="input-text size-L">
+        </div>
+      </div>
+
+      <div class="row cl">
+        <div class="formControls col-xs-8 col-xs-offset-3">
+          <input type="button" id="btnLogin" class="btn btn-success radius size-L" value="&nbsp;登&nbsp;&nbsp;录&nbsp;">
+          <input type="reset" class="btn btn-default radius size-L" value="&nbsp;重&nbsp;&nbsp;置&nbsp;">
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="footer">
+  Copyright &copy;2001 - 2018 华融湘江银行 All Right Reserved.
+</div>
+
+<script src="js/jquery-3.3.1.min.js"></script>
+<script src="static/h-ui/js/H-ui.min.js"></script>
+<script src="static/layer/2.4/layer.js"></script>
+<script src="js/bank.js"></script>
+<script>
+  $(window).on('load', () => {
+    if (window != top) {
+      top.location.href = 'index.html'
+    }
+
+    // 注册 登录按钮 事件
+    $('#btnLogin').click(() => {
+      let username = $.trim($('#username').val())
+      let password = $.trim($('#password').val())
+
+      if (!username) {
+        // layer 弹窗
+        layer.alert('请输入您的用户名!')
+        return
+      }
+
+      if (!password) {
+        // layer 弹窗
+        layer.alert('请输入您的密码!')
+        return
+      }
+
+      // 登录请求后端 api
+      $.ajax({
+        type: 'post',
+        url: BANK_URL + 'auth',
+        data: JSON.stringify({username: username, password: password}),
+        contentType: 'application/json; charset=utf-8',
+        dataTye: 'json',
+        success: function (data) {
+          // 本地存储令牌
+          setJwtToken(data.token)
+          window.location.href = 'main.html'
+        },
+        error: function (jqXHR, textStatus, errorThrown) {
+          if (jqXHR.status === 401) {
+            console.log('Spring Exception!')
+          } else {
+            throw new Error('an unexpected error occured!')
+          }
+          layer.alert('错误的用户名或密码!')
+        }
+      })
+
+    })
+  })
+</script>
+</body>
+</html>

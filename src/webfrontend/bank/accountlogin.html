@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>华融湘江银行</title>
+  <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb">
+  <i class="Hui-iconfont">&#xe67f;</i>&nbsp;首页
+  <span class="c-green en">&gt;</span>储户登录
+  <a id="btnLogout" class="btn btn-danger radius r"
+     style="line-height: 1.6em;margin-top: 3px"
+     href="javascript:logout();"
+     title="注销">
+    <i class="Hui-iconfont">&#xe68f;</i>
+  </a>
+</nav>
+
+<div class="page-container">
+  <div id="form">
+    <input type="text" id="accountId" placeholder="储户账号"><br>
+    <input type="password" id="password" placeholder="密码"><br>
+    <button id="btnAccountLogin" type="button">储户登录</button>
+  </div>
+
+  <div id="remaining">
+    账号:<span id="span-accountid"></span><br>
+    余额:<span id="span-remaining"></span>
+  </div>
+</div>
+
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2018-2028 华融湘江银行 All Rights Reserved.
+  </div>
+</footer>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+<script src="../js/bank.js"></script>
+<script>
+
+  $(window).on('load', () => {
+    $('#btnLogout').hide()
+    $('#remaining').hide()
+
+    $("#btnAccountLogin").click(() => {
+      $.ajax({
+        type: 'post',
+        url: BANK_URL + 'accounts_login',
+        data: {
+          accountId: $('#accountId').val(), password: $('#password').val()
+        },
+        headers: createAuthorizationTokenHeader(),
+        dataType: 'json',
+        success: function (account) {
+          if (account) {
+            $('#btnLogout').show()
+            $('#remaining').show()
+            $('#form').hide()
+
+            $('#span-accountid').html(account.accountId)
+            $('#span-remaining').html(account.remaining)
+
+            localStorage.setItem('aid', account.id)
+          }
+        }
+      })
+    })
+
+    // 当已成功登录后查看余额
+    if (localStorage.getItem('aid')) {
+      $.ajax({
+        type: 'get',
+        url: BANK_URL + 'accounts/' + localStorage.getItem('aid'),
+        headers: createAuthorizationTokenHeader(),
+        dataType: 'json',
+        success: function (account) {
+          if (account) {
+            $('#btnLogout').show()
+            $('#remaining').show()
+            $('#form').hide()
+
+            $('#span-accountid').html(account.accountId)
+            $('#span-remaining').html(Number.parseFloat(account.remaining).toFixed(2))
+          }
+        }
+      })
+    }
+  })
+
+  function logout() {
+    localStorage.removeItem('aid')
+    location.replace(location.href)
+  }
+</script>
+</body>
+</html>

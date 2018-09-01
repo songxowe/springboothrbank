@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>华融湘江银行</title>
+  <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb">
+  <i class="Hui-iconfont">&#xe67f;</i>&nbsp;首页
+  <span class="c-green en">&gt;</span>交易明细
+  <a class="btn btn-success radius r"
+     style="line-height: 1.6em;margin-top: 3px"
+     href="javascript:location.replace(location.href);"
+     title="刷新">
+    <i class="Hui-iconfont">&#xe68f;</i>
+  </a>
+</nav>
+
+<div class="page-container">
+  <div class="cl pd-5 bg-1 bk-gray">
+    交易类型:
+    <select id="tradeType">
+      <option value="">全部</option>
+      <option value="存款">存款</option>
+      <option value="取款">取款</option>
+      <option value="转账">转账</option>
+    </select>
+    交易时间范围:
+    <input type="date" id="beginDate">
+    <input type="date" id="endDate">
+
+    <input type="button" onclick="loadTrades()" value="查询" class="btn btn-success-outline">
+  </div>
+
+  <div class="mt-20">
+    <table
+        class="table table-border table-bordered table-hover table-bg table-sort">
+      <thead>
+      <tr class="text-c">
+        <th width="40">ID</th>
+        <th width="100">tradeTime</th>
+        <th width="100">money</th>
+        <th width="40">tradeType</th>
+        <th width="150">remark</th>
+      </tr>
+      </thead>
+      <tfoot>
+      <tr class="text-c">
+        <th width="40">ID</th>
+        <th width="100">tradeTime</th>
+        <th width="100">money</th>
+        <th width="40">tradeType</th>
+        <th width="150">remark</th>
+      </tr>
+      </tfoot>
+      <tbody>
+      <!--
+      <tr class="text-c">
+        <td>1</td>
+        <td>2018-08-31 09:00:01</td>
+        <td>1000.00</td>
+        <td>存款</td>
+        <td>开户存款</td>
+      </tr>
+      -->
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2018-2028 华融湘江银行 All Rights Reserved.
+  </div>
+</footer>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+<script src="../js/bank.js"></script>
+<script>
+
+  $(window).on('load', () => {
+    if (!localStorage.getItem('aid')) {
+      location.href = 'accountlogin.html'
+    }
+
+    loadTrades()
+  })
+
+  function loadTrades() {
+    // 时间范围是 1 个月
+    // 结束日期不能早于开始日期
+    // 结束日期不能晚于今天
+
+    $.ajax({
+      type: 'get',
+      url: BANK_URL + 'trades',
+      data: {
+        accountId: localStorage.getItem('aid'),
+        tradeType: $('#tradeType').val(),
+        beginDate: $('#beginDate').val(),
+        endDate: $('#endDate').val()
+      },
+      headers: createAuthorizationTokenHeader(),
+      dataType: 'json',
+      success: function (data) {
+        // console.log(data)
+        if (data) {
+          $("tbody").empty()
+        }
+
+        let text = ``
+        data.forEach(trade => {
+          // console.log(trade.money,trade.tradeTime)
+          text += `
+          <tr class="text-c">
+            <td>${trade.id}</td>
+            <td>${trade.tradeTime}</td>
+            <td>${trade.money}</td>
+            <td>${trade.tradeType}</td>
+            <td>${trade.remark}</td>
+          </tr>
+          `
+        })
+        $("tbody").append(text)
+        $(".table-hover").DataTable({
+          language: {
+            url: "../js/zh_CN.txt"
+          },
+          retrieve: true
+        })
+      }
+    })
+  }
+
+</script>
+</body>
+</html>

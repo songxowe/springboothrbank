@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>华融湘江银行</title>
+  <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb">
+  <i class="Hui-iconfont">&#xe67f;</i>&nbsp;首页
+  <span class="c-green en">&gt;</span>系统用户管理
+  <a class="btn btn-success radius r"
+     style="line-height: 1.6em;margin-top: 3px"
+     href="javascript:location.replace(location.href);"
+     title="刷新">
+    <i class="Hui-iconfont">&#xe68f;</i>
+  </a>
+</nav>
+
+<div class="page-container">
+  <div class="cl pd-5 bg-1 bk-gray">
+    <span class="l">
+      <a href="javascript:;"
+         onclick="editUser('新增系统用户',0)"
+         class="btn btn-primary radius">
+        <i class="Hui-iconfont">&#xe600</i>&nbsp;新增
+      </a>
+    </span>
+  </div>
+
+  <div class="mt-20">
+    <table
+        class="table table-border table-bordered table-hover table-bg table-sort">
+      <thead>
+      <tr class="text-c">
+        <th width="80">用户名</th>
+        <th width="100">Email</th>
+        <th width="100">是否启用</th>
+        <th width="100">上次登录时间</th>
+        <th width="100">操作</th>
+      </tr>
+      </thead>
+      <tfoot>
+      <tr class="text-c">
+        <th width="80">用户名</th>
+        <th width="100">Email</th>
+        <th width="100">是否启用</th>
+        <th width="100">上次登录时间</th>
+        <th width="100">操作</th>
+      </tr>
+      </tfoot>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2018-2028 华融湘江银行 All Rights Reserved.
+  </div>
+</footer>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+<script src="../js/bank.js"></script>
+<script>
+  $(window).on('load', () => {
+    $.ajax({
+      type: "get",
+      url: BANK_URL + "users",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (users) {
+        // console.log(users)
+        var text = ``
+        users.forEach((user) => {
+          var enabled = "是"
+          if (user.enabled == 0) {
+            enabled = "否"
+          }
+
+          text += `
+          <tr class="text-c">
+            <td width="80">${user.username}</td>
+            <td width="100">${user.email}</td>
+            <td width="100">${enabled}</td>
+            <td width="100">${user.loginDate}</td>
+            <td width="100">
+              <button type="button" onclick="editUser('修改系统用户',${user.id})" class="btn btn-secondary-outline radius">修改</button>
+              &nbsp;&nbsp;
+              <button type="button" onclick="addUserAuthority('系统用户授权',${user.id})" class="btn btn-warning-outline radius">授权</button>
+             </td>
+          </tr>
+          `
+        })
+        $("tbody").append(text)
+
+        $(".table-hover").DataTable({
+          language: {
+            url: "../js/zh_CN.txt"
+          }
+        })
+      }
+    })
+  })
+
+  function addUserAuthority(title,id) {
+    localStorage.setItem("id", id)
+    layer_show(title, 'userAuthority.html', 450, 405)
+  }
+
+  function editUser(title, id) {
+    // id: 0 新增; !0 修改
+    localStorage.setItem("id", id)
+
+    // 显示窗口(标题,url,width,height)
+    layer_show(title, 'useredit.html', 450, 405)
+  }
+</script>
+</body>
+</html>

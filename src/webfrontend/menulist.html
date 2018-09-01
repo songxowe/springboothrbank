@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>华融湘江银行</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb">
+  <i class="Hui-iconfont">&#xe67f;</i>&nbsp;首页
+  <span class="c-green en">&gt;</span>菜单管理
+  <a class="btn btn-success radius r"
+     style="line-height: 1.6em;margin-top: 3px"
+     href="javascript:location.replace(location.href);"
+     title="刷新">
+    <i class="Hui-iconfont">&#xe68f;</i>
+  </a>
+</nav>
+
+<div class="page-container">
+  <div class="cl pd-5 bg-1 bk-gray">
+    <span class="l">
+      <a href="javascript:;"
+         onclick="editMenu('新增菜单',0)"
+         class="btn btn-primary radius">
+        <i class="Hui-iconfont">&#xe600</i>&nbsp;新增
+      </a>
+    </span>
+  </div>
+
+  <div class="mt-20">
+    <table
+        class="table table-border table-bordered table-hover table-bg table-sort">
+      <thead>
+      <tr class="text-c">
+        <th width="40">ID</th>
+        <th width="40">Parent Id</th>
+        <th width="40">Seq</th>
+        <th width="100">Name</th>
+        <th width="150">Link URL</th>
+        <th width="100">操作</th>
+      </tr>
+      </thead>
+      <tfoot>
+      <tr class="text-c">
+        <th width="40">ID</th>
+        <th width="40">Parent Id</th>
+        <th width="40">Seq</th>
+        <th width="100">Name</th>
+        <th width="150">Link URL</th>
+        <th width="100">操作</th>
+      </tr>
+      </tfoot>
+      <tbody></tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2018-2028 华融湘江银行 All Rights Reserved.
+  </div>
+</footer>
+
+<script src="js/jquery-3.3.1.min.js"></script>
+<script src="js/jquery.dataTables.min.js"></script>
+<script src="static/h-ui/js/H-ui.min.js"></script>
+<script src="static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="static/layer/2.4/layer.js"></script>
+<script src="static/layer/laypage.js"></script>
+<script src="js/bank.js"></script>
+<script>
+  $(window).on('load', () => {
+    $.ajax({
+      url: BANK_URL + "menus",
+      type: "GET",
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data, textStatus, jqXHR) {
+        var text = ``
+
+        data.forEach(item => {
+          text += `
+          <tr id="${item.id}" class="text-c">
+            <td>${item.id}</td>
+            <td>${item.parentId}</td>
+            <td>${item.seq}</td>
+            <td>${item.name}</td>
+            <td>${item.linkUrl}</td>
+            <td>
+              <button onclick="editMenu('修改菜单',${item.id})" class="btn btn-success-outline radius">
+                修改
+              </button>
+              &nbsp;&nbsp;
+              <button onclick="removeMenu(${item.id},'${item.name}')" class="btn btn-danger-outline radius">
+                删除
+              </button>
+            </td>
+          </tr>
+          `
+        })
+
+        $("tbody").append(text)
+        $(".table-hover").DataTable({
+          language: {
+            url: "js/zh_CN.txt"
+          }
+        })
+      },
+      error: function (jqXHR, textStatus, errorThrows) {
+        console.log("Spring exception.")
+      }
+    })
+
+  })
+
+  function removeMenu(id, name) {
+    layer.confirm("是否确认删除 " + name + " ?", () => {
+      $.ajax({
+        type: "delete",
+        url: BANK_URL + "menus/" + id,
+        dataType: "json",
+        headers: createAuthorizationTokenHeader(),
+        success: function (data) {
+          setTimeout(() => {
+            location.reload()
+            layer.close()
+          }, 800)
+        }
+      })
+    })
+  }
+
+  function editMenu(title, id) {
+    // id: 0 新增; !0 修改
+    localStorage.setItem("id", id)
+    layer_show(title, 'menuedit.html', 550, 560)
+  }
+</script>
+</body>
+</html>

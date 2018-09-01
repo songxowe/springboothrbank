@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>华融湘江银行</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="static/h-ui.admin/css/style.css">
+</head>
+<body>
+<div class="page-container">
+
+  <div class="mt-20">
+    <table
+        class="table table-border table-bordered table-hover table-bg table-sort">
+      <thead>
+      <tr class="text-c">
+        <th width="20">ID</th>
+        <th width="50">Name</th>
+        <th width="100">Code</th>
+        <th width="100">操作</th>
+      </tr>
+      </thead>
+      <tfoot>
+      <tr class="text-c">
+        <th width="20">ID</th>
+        <th width="50">Name</th>
+        <th width="100">Code</th>
+        <th width="100">操作</th>
+      </tr>
+      </tfoot>
+      <tbody></tbody>
+    </table>
+    <input type="hidden" id="userId">
+  </div>
+</div>
+
+<script src="js/jquery-3.3.1.min.js"></script>
+<script src="js/jquery.dataTables.min.js"></script>
+<script src="static/h-ui/js/H-ui.min.js"></script>
+<script src="static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="static/layer/2.4/layer.js"></script>
+<script src="js/jquery.validation/jquery.validate.js"></script>
+<script src="js/jquery.validation/validate-methods.js"></script>
+<script src="js/jquery.validation/messages_zh.js"></script>
+<script src="js/bank.js"></script>
+
+<script>
+  $(window).on('load', () => {
+    var userId = localStorage.getItem("id")
+    $("#userId").val(userId)
+    localStorage.removeItem("id")
+
+    $.ajax({
+      url: BANK_URL + "roles",
+      type: "GET",
+      contentType: "application/json; charset=utf-8",
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data, textStatus, jqXHR) {
+        var text = ``
+
+        data.forEach(item => {
+          text += `
+          <tr id="${item.id}" class="text-c">
+            <td>${item.id}</td>
+            <td>${item.name}</td>
+            <td>${item.code}</td>
+            <td>
+              <button onclick="grantOrRevoke(1,${item.id})" class="btn btn-success-outline radius">
+                授权
+              </button>
+              &nbsp;&nbsp;
+              <button onclick="grantOrRevoke(0,${item.id})" class="btn btn-danger-outline radius">
+                撤销
+              </button>
+            </td>
+          </tr>
+          `
+        })
+
+        $("tbody").append(text)
+        $(".table-hover").DataTable({
+          language: {
+            url: "js/zh_CN.txt"
+          }
+        })
+
+        // 已授权则标绿
+        $.ajax({
+          url: BANK_URL + "userRole_findRole",
+          type: "post",
+          data: {userId: $("#userId").val()},
+          dataType: "json",
+          headers: createAuthorizationTokenHeader(),
+          success: function (data) {
+            data.forEach(role => {
+              $("#" + role.id).css("background", "powderblue")
+            })
+          }
+        })
+      },
+      error: function (jqXHR, textStatus, errorThrows) {
+        console.log("Spring exception.")
+      }
+    })
+  })
+
+  function grantOrRevoke(isAuth, roleId) {
+    var userId = $("#userId").val()
+
+    $.ajax({
+      type: "post",
+      url: BANK_URL + "userRole_grantOrRevoke",
+      data: {isAuth: isAuth, roleId: roleId, userId: userId},
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data) {
+        if (data) {
+          var index = parent.layer.getFrameIndex(window.name)
+          layer.msg("保存成功!", {icon: 1, time: 1000})
+
+          setTimeout(() => {
+            window.parent.location.reload()
+            parent.layer.close(index)
+          }, 800)
+        }
+      },
+      error: function (jqXHR, textStatus, errorthrown) {
+        layer.alert("系统内部错误,请与管理员联系!")
+      }
+    })
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>华融湘江银行</title>
+  <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<article class="page-container">
+  <form class="form form-horizontal" id="form-edit-authority" method="post">
+    <div class="row cl">
+      <label for="authority" class="form-label col-xs-2 col-ms-1"
+             style="padding-left: 8px;">
+        <span class="c-red">*</span>&nbsp;授权:
+      </label>
+      <div class="formControls col-xs-10 col-sm-11">
+        <input type="hidden" id="id" name="id">
+        <input type="checkbox" id="authority" name="authorityIds" value="1">系统管理员
+        <input type="checkbox" name="authorityIds" value="2">经理
+        <input type="checkbox" name="authorityIds" value="3">办事员
+      </div>
+    </div>
+
+    <div class="row cl">
+      <div class="col-xs-8 col-sm-9 col-xs-offset-4 col-sm-offset-3">
+        <input type="button" id="btnSave" class="btn btn-primary radius"
+               value="&nbsp;&nbsp;保存&nbsp;&nbsp;">
+      </div>
+    </div>
+  </form>
+</article>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../js/jquery.validation/jquery.validate.js"></script>
+<script src="../js/jquery.validation/validate-methods.js"></script>
+<script src="../js/jquery.validation/messages_zh.js"></script>
+<script src="../js/bank.js"></script>
+<script>
+  $(window).on('load', () => {
+    var id = localStorage.getItem("id")
+    $("#id").val(id)
+    localStorage.removeItem("id")
+
+    $.ajax({
+      type: "get",
+      url: BANK_URL + "finduserauthority",
+      data: {userId: $("#id").val()},
+      dataType: "json",
+      headers: createAuthorizationTokenHeader(),
+      success: function (data) {
+        data.forEach((item, i) => {
+          var checkedObj = $('input:checkbox[name="authorityIds"]')
+          checkedObj.each(function () {
+            if (this.value == item) {
+              $(this).prop("checked", true)
+            }
+          })
+        })
+      }
+    })
+
+
+    $("#btnSave").click(() => {
+      var authorityIds = []
+      var checkedObj = $('input:checkbox[name="authorityIds"]:checked')
+      checkedObj.each(function () {
+        authorityIds.push(this.value);
+      })
+
+      console.log(authorityIds.join(","), '........')
+
+      $.ajax({
+        type: "post",
+        url: BANK_URL + "userauthority",
+        data: {userId: $("#id").val(), authorityIds: authorityIds.join(",")},
+        dataTye: "json",
+        headers: createAuthorizationTokenHeader(),
+        success: function (data) {
+          var index = parent.layer.getFrameIndex(window.name)
+          layer.msg("授权成功!", {icon: 1, time: 1000})
+
+          setTimeout(() => {
+            window.parent.location.reload()
+            parent.layer.close(index)
+          }, 800)
+        }
+      })
+    })
+  })
+</script>
+</body>
+</html>

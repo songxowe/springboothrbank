@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>华融湘江银行</title>
+  <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<nav class="breadcrumb">
+  <i class="Hui-iconfont">&#xe67f;</i>&nbsp;首页
+  <span class="c-green en">&gt;</span>储户登录
+</nav>
+
+<div class="page-container">
+  操作类型:
+  <select id="tradeType">
+    <option value="存款">存款</option>
+    <option value="取款">取款</option>
+  </select><br>
+  金额:
+  <input type="number" step="0.01" id="money" placeholder="金额"><br>
+  <button id="btnOK" type="button">确定</button>
+</div>
+
+<footer class="footer mt-20">
+  <div class="container">
+    Copyright &copy;2018-2028 华融湘江银行 All Rights Reserved.
+  </div>
+</footer>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../js/jquery.dataTables.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../static/layer/laypage.js"></script>
+<script src="../js/bank.js"></script>
+<script>
+
+  $(window).on('load', () => {
+    if (!localStorage.getItem('aid')) {
+      location.href = 'accountlogin.html'
+    }
+
+    $('#btnOK').click(() => {
+      if ($('#money').val() < 0) {
+        layer.alert("请输入正整数的金额!")
+        return
+      }
+
+      $.ajax({
+        type: 'put',
+        url: BANK_URL + 'accounts',
+        data: {
+          id: localStorage.getItem('aid'),
+          money: $('#money').val(),
+          tradeType: $('#tradeType').val()
+        },
+        headers: createAuthorizationTokenHeader(),
+        dataType: 'json',
+        success: function (data) {
+          layer.alert(data.code + " " + data.message)
+        }
+      })
+    })
+  })
+
+</script>
+</body>
+</html>

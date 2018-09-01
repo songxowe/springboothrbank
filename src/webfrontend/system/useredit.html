@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>华融湘江银行</title>
+  <link rel="shortcut icon" href="../favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="../static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="../static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="../static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="../static/h-ui.admin/css/style.css">
+</head>
+<body>
+<article class="page-container">
+  <form class="form form-horizontal" id="form-edit-user" method="post">
+    <div class="row cl">
+      <label for="username" class="form-label col-xs-4 col-ms-3"
+             style="padding-left: 8px;">
+        <span class="c-red">*</span>&nbsp;用户名:
+      </label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="hidden" id="id" name="id">
+        <input type="text" class="input-text radius"
+               placeholder="用户名" id="username" name="username">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <label for="password" class="form-label col-xs-4 col-ms-3"
+             style="padding-left: 8px;">
+        <span class="c-red">*</span>&nbsp;密码:
+      </label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="password" class="input-text radius"
+               placeholder="密码" id="password" name="password">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <label for="email" class="form-label col-xs-4 col-ms-3"
+             style="padding-left: 8px;">
+        <span class="c-red">*</span>&nbsp;Email:
+      </label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="email" class="input-text radius"
+               placeholder="Email" id="email" name="email">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <label for="enabled" class="form-label col-xs-4 col-ms-3"
+             style="padding-left: 8px;">
+        <&nbsp;&nbsp;状态:
+      </label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="radio" id="enabled" name="enabled" value="1" checked>启用
+        <input type="radio" name="enabled" value="0">禁用
+      </div>
+    </div>
+
+    <div class="row cl">
+      <div class="col-xs-8 col-sm-9 col-xs-offset-4 col-sm-offset-3">
+        <input type="submit" class="btn btn-primary radius"
+               value="&nbsp;&nbsp;保存&nbsp;&nbsp;">
+      </div>
+    </div>
+  </form>
+</article>
+
+<script src="../js/jquery-3.3.1.min.js"></script>
+<script src="../static/h-ui/js/H-ui.min.js"></script>
+<script src="../static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="../static/layer/2.4/layer.js"></script>
+<script src="../js/jquery.validation/jquery.validate.js"></script>
+<script src="../js/jquery.validation/validate-methods.js"></script>
+<script src="../js/jquery.validation/messages_zh.js"></script>
+<script src="../js/bank.js"></script>
+<script>
+  $(window).on('load', () => {
+    var id = localStorage.getItem("id")
+    $("#id").val(id)
+    localStorage.removeItem("id")
+
+    $("#form-edit-user").validate({
+      rules: {
+        username: {
+          required: true
+        },
+        password: {
+          required: true
+        },
+        email: {
+          required: true
+        }
+      },
+      onkeyup: false,
+      focusCleanup: true,
+      success: "valid",
+      submitHandler: function (form) {
+        var type = "post"
+        if ($("#id").val() > 0) {
+          type = "put"
+        }
+
+        $.ajax({
+          type: type,
+          url: BANK_URL + "users",
+          data: JSON.stringify(getFormData($(form))),
+          contentType: "application/json;charset=utf-8",
+          dataType: "json",
+          headers: createAuthorizationTokenHeader(),
+          success: function (data) {
+            if (data) {
+              var index = parent.layer.getFrameIndex(window.name)
+              layer.msg("保存成功!", {icon: 1, time: 1000})
+
+              setTimeout(() => {
+                window.parent.location.reload()
+                parent.layer.close(index)
+              }, 800)
+            }
+          }
+        })
+      }
+    })
+  })
+</script>
+</body>
+</html>

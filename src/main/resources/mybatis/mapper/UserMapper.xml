@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- @author SONG  -->
+<mapper namespace="com.newer.springboot.mapper.UserMapper">
+  <resultMap id="result-user" type="User">
+    <id property="id" column="id"/>
+    <result property="username" column="username"/>
+    <result property="password" column="password"/>
+    <result property="email" column="email"/>
+    <result property="status" column="status"/>
+    <result property="lastPasswordResetDate" column="last_password_reset_date"/>
+
+    <!-- 用户关联的角色 -->
+    <collection property="roles" ofType="Role">
+      <id property="id" column="role_id"/>
+      <result property="name" column="role_name"/>
+      <result property="code" column="role_code"/>
+    </collection>
+  </resultMap>
+
+  <select id="findByUsername" resultMap="result-user">
+    select u.id,u.username,u.password,u.email,u.status,
+    u.last_password_reset_date,r.id role_id,r.NAME role_name,r.CODE role_code
+    from sys_users u,sys_roles r,sys_user_role ur
+    where u.status='1' and u.username=#{username}
+    and u.id=ur.user_id and ur.ROLE_ID=r.id
+  </select>
+
+</mapper>

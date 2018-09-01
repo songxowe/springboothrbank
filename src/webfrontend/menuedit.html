@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>华融湘江银行</title>
+  <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="js/jquery.easy/themes/default/easyui.css">
+  <link rel="stylesheet" href="js/jquery.easy/themes/icon.css">
+  <link rel="stylesheet" href="static/h-ui/css/H-ui.min.css">
+  <link rel="stylesheet" href="static/h-ui.admin/css/H-ui.admin.css">
+  <link rel="stylesheet" href="static/Hui-iconfont/1.0.8/iconfont.css">
+  <link rel="stylesheet" href="static/h-ui.admin/skin/default/skin.css" id="skin">
+  <link rel="stylesheet" href="static/h-ui.admin/css/style.css">
+</head>
+<body>
+<article class="page-container">
+  <form class="form form-horizontal" id="form-edit-menu" method="post">
+    <div class="row cl">
+      <label for="name" class="form-label col-xs-4 col-ms-3"
+             style="padding-left: 8px;">
+        <span class="c-red">*</span>&nbsp;菜单标题:
+      </label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="hidden" id="id" name="id">
+        <input type="hidden" name="status" value="1"/>
+        <input type="text" class="input-text radius"
+               placeholder="菜单标题" id="name" name="name">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <label for="linkUrl" class="form-label col-xs-4 col-ms-3"
+             style="padding-left: 8px;">
+        <span class="c-red"></span>&nbsp;转向地址:
+      </label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="text" class="input-text radius"
+               placeholder="转向地址" id="linkUrl" name="linkUrl">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <label for="seq" class="form-label col-xs-4 col-ms-3"
+             style="padding-left: 8px;">
+        <span class="c-red"></span>&nbsp;优选顺序:
+      </label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="number" class="input-text radius"
+               placeholder="优选顺序" id="seq" name="seq">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <label for="menuSelect" class="form-label col-xs-4 col-ms-3"
+             style="padding-left: 8px;">
+        <span class="c-red"></span>&nbsp;父级菜单:
+      </label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="hidden" id="parentMenu" name="parentId"/>
+        <input type="text" class="input-text radius"
+               placeholder="父级菜单" id="menuSelect">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <label for="descn" class="form-label col-xs-4 col-ms-3"
+             style="padding-left: 8px;">
+        <span class="c-red"></span>&nbsp;菜单描述:
+      </label>
+      <div class="formControls col-xs-8 col-sm-9">
+        <input type="text" class="input-text radius"
+               placeholder="菜单描述" id="descn" name="descn">
+      </div>
+    </div>
+
+    <div class="row cl">
+      <div class="col-xs-8 col-sm-9 col-xs-offset-4 col-sm-offset-3">
+        <input type="submit" class="btn btn-primary radius"
+               value="&nbsp;&nbsp;保存&nbsp;&nbsp;">
+      </div>
+    </div>
+  </form>
+</article>
+
+<script src="js/jquery-3.3.1.min.js"></script>
+<script src="static/h-ui/js/H-ui.min.js"></script>
+<script src="static/h-ui.admin/js/H-ui.admin.js"></script>
+<script src="static/layer/2.4/layer.js"></script>
+<script src="js/jquery.validation/jquery.validate.js"></script>
+<script src="js/jquery.validation/validate-methods.js"></script>
+<script src="js/jquery.validation/messages_zh.js"></script>
+<script src="js/jquery.easy/jquery.easyui.min.js"></script>
+<script src="js/bank.js"></script>
+<script type="text/javascript">
+  $("#menuSelect").combotree({
+    url: BANK_URL + "menu_indexAllEdit",
+    type: "post",
+    width: 200,
+    onLoadSuccess: function (node, data) {
+      if (data) {
+        $(data).each(function (index, value) {
+          if (this.state == "closed") {
+            var menutree = $("#menuSelect").combotree("tree")
+            menutree.tree("expandAll")
+          }
+        });
+      }
+    },
+    onClick: function (node) {
+      $("#parentMenu").val(node.id)
+    }
+  })
+
+</script>
+<script>
+  $(window).on('load', () => {
+    var id = localStorage.getItem("id")
+    $("#id").val(id)
+    localStorage.removeItem("id")
+
+    // 当修改时,先根据 id 查询
+    if (id > 0) {
+      $.ajax({
+        type: "get",
+        url: BANK_URL + "menus/" + id,
+        dataType: "json",
+        headers: createAuthorizationTokenHeader(),
+        success: function (menu) {
+          $("#id").val(menu.id)
+          $("#name").val(menu.name)
+          $("#linkUrl").val(menu.linkUrl)
+          $("#seq").val(menu.seq)
+          $("#parentId").val(menu.parentId)
+          $("#descn").val(menu.descn)
+
+          $("#menuSelect").combotree("setValue", menu.parentId);
+        }
+      })
+    }
+
+    $("#form-edit-menu").validate({
+      rules: {
+        name: {
+          required: true
+        }
+      },
+      onkeyup: false,
+      focusCleanup: true,
+      success: "valid",
+      submitHandler: function (form) {
+        var type = "post"
+        if ($("#id").val() > 0) {
+          type = "put"
+        }
+
+        $.ajax({
+          type: type,
+          url: BANK_URL + "menus",
+          data: JSON.stringify(getFormData($(form))),
+          dataType: "json",
+          contentType: "application/json;charset=utf-8",
+          headers: createAuthorizationTokenHeader(),
+          success: function (data) {
+            if (data) {
+              var index = parent.layer.getFrameIndex(window.name)
+              layer.msg("保存成功!", {icon: 1, time: 1000})
+
+              setTimeout(() => {
+                window.parent.location.reload()
+                parent.layer.close(index)
+              }, 800)
+            }
+          },
+          error: function (jqXHR, textStatus, errorthrown) {
+            layer.alert("系统内部错误,请与管理员联系!")
+          }
+        })
+      }
+    })
+  })
+</script>
+</body>
+</html>
