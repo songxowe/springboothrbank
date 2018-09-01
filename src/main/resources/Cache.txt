@@ -1,0 +1,100 @@
+@EnableCaching: 启动缓存
+重新配置RedisCacheManager，使用新的配置的值
+
+@Cacheable的属性的意义
+
+cacheNames：指定缓存的名称
+key：定义组成的key值，如果不定义，则使用全部的参数计算一个key值。可以使用spring El表达式
+
+@Cacheable(cacheNames="book1", key="#id")
+public Book queryBookCacheable(String id)
+
+/**
+     * 缓存的key也可以指定对象的成员变量
+     * @param qry
+     * @return
+     */
+@Cacheable(cacheNames="book1", key="#qry.id")
+    public Book queryBookCacheableByBookQry(BookQry qry)
+    
+/**
+     * 以上我们使用默认的keyGenerator，对应spring的SimpleKeyGenerator 
+     *  如果你的使用很复杂，我们也可以自定义myKeyGenerator的生成key
+     * 
+     *  key和keyGenerator是互斥，如果同时制定会出异常
+     *  The key and keyGenerator parameters are mutually exclusive and an operation specifying both will result in an exception.
+     * 
+     * @param id
+     * @return
+     */
+    @Cacheable(cacheNames="book3",  keyGenerator="myKeyGenerator")
+    public Book queryBookCacheableUseMyKeyGenerator(String id)
+    
+/***
+     * 如果设置sync=true，
+     *  如果缓存中没有数据，多个线程同时访问这个方法，则只有一个方法会执行到方法，其它方法需要等待
+     *  如果缓存中已经有数据，则多个线程可以同时从缓存中获取数据
+     * @param id
+     * @return
+     */
+    @Cacheable(cacheNames="book3", sync=true)
+    public Book queryBookCacheableWithSync(String id)    
+    
+/**
+     * 条件缓存：
+     * 只有满足condition的请求才可以进行缓存，如果不满足条件，则跟方法没有@Cacheable注解的方法一样
+     *  如下面只有id < 3才进行缓存
+     * 
+     */
+    @Cacheable(cacheNames="book11", condition="T(java.lang.Integer).parseInt(#id) < 3 ")
+    public Book queryBookCacheableWithCondition(String id)     
+    
+    
+/**
+     * 条件缓存：
+     * 对不满足unless的记录，才进行缓存
+     *  "unless expressions" are evaluated after the method has been called
+     *  如下面：只对不满足返回 'T(java.lang.Integer).parseInt(#result.id) <3 ' 的记录进行缓存
+     * @param id
+     * @return
+     */
+    @Cacheable(cacheNames="book22", unless = "T(java.lang.Integer).parseInt(#result.id) <3 ")
+    public Book queryBookCacheableWithUnless(String id) 
+
+
+
+ @CacheEvict
+
+删除缓存
+
+allEntries = true: 清空缓存book1里的所有值
+allEntries = false: 默认值，此时只删除key对应的值
+    /**
+     * allEntries = true: 清空book1里的所有缓存
+     */
+    @CacheEvict(cacheNames="book1", allEntries=true)
+
+
+/**
+     * 对符合key条件的记录从缓存中book1移除
+     */
+    @CacheEvict(cacheNames="book1", key="#id")
+    public void updateBook(String id, String name)
+
+
+
+ @CachePut
+
+每次执行都会执行方法，无论缓存里是否有值，同时使用新的返回值的替换缓存中的值。这里不同于@Cacheable：@Cacheable如果缓存没有值，从则执行方法并缓存数据，如果缓存有值，则从缓存中获取值
+
+    @CachePut(cacheNames="book1", key="#id")
+    public Book queryBookCachePut(String id)
+
+
+
+@CacheConfig
+
+@CacheConfig: 类级别的注解：如果我们在此注解中定义cacheNames，则此类中的所有方法上 @Cacheable的cacheNames默认都是此值。当然@Cacheable也可以重定义cacheNames的值
+@Component
+@CacheConfig(cacheNames="booksAll") 
+    
